@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Developer {
+  id           Int            @id @default(autoincrement())
+  githubId     Int         @unique
+  name         String?
+  username     String
+  avatarUrl    String?
+  email        String?
+  accessToken  String?
+  refreshToken String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  Commit       Commit[]
+  Pull_Request Pull_Request[]
+  Issue        Issue[]
+  Code_Quality Code_Quality[]
+}
+
+model Commit {
+  id           Int       @id @default(autoincrement())
+  developer    Developer @relation(fields: [developerId], references: [id])
+  developerId  Int
+  repo         String
+  commit_count Int
+  additions    Int
+  deletions    Int
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Pull_Request {
+  id          Int       @id @default(autoincrement())
+  developer   Developer @relation(fields: [developerId], references: [id])
+  developerId Int
+  repo        String
+  pr_count    Int
+  status      PR_STATUS
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Issue {
+  id          Int          @id @default(autoincrement())
+  developer   Developer    @relation(fields: [developerId], references: [id])
+  developerId Int
+  repo        String
+  issue_count Int
+  status      ISSUE_STATUS
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Code_Quality {
+  id                    Int       @id @default(autoincrement())
+  developer             Developer @relation(fields: [developerId], references: [id])
+  developerId           Int
+  repo                  String
+  lint_errors           Int       @default(0)
+  formatting_errors     Int       @default(0)
+  code_smells           Int
+  maintainability_score Float
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+enum PR_STATUS {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+enum ISSUE_STATUS {
+  OPEN
+  CLOSED
+  RESOLVED
+  IGNORED
+}
