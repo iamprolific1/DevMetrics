@@ -2,12 +2,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable, Req, Res } from '@nestjs/common';
+import { Injectable, Req, Res, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
 import axios from 'axios';
 import * as bcrypt from 'bcryptjs';
+import logger from 'src/utils/logger';
 
 type TokenResponseType = {
   access_token: string;
@@ -45,7 +46,6 @@ export class AuthService {
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const userProfile = await this.getUserProfile(accessToken);
-      console.log('✅ Authenticated User:', userProfile);
       const user = await this.validateUser(userProfile, accessToken);
       const tokens = await this.generateTokens(user);
 
@@ -54,7 +54,7 @@ export class AuthService {
 
       // save user's data in the database.
     } catch (error) {
-      console.error('❌ Authentication failed:', error);
+      logger.error('❌ Authentication failed:', error);
       response.status(401).json({ error: 'Authentication failed' });
     }
   }
@@ -126,7 +126,7 @@ export class AuthService {
     });
   }
 
-  private async generateTokens(user: { githubId: number; username: string }) {
+  async generateTokens(user: { githubId: number; username: string }) {
     const payload = { sub: user.githubId, username: user.username };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -147,5 +147,28 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken };
+  }
+
+  // function to validate refresh token
+  async validateRefreshToken(refreshToken: string) {
+    type PayloadType = { sub: number; username: string };
+
+    const payload: PayloadType = this.jwtService.verify(refreshToken, {
+      secret: process.env.REFRESH_SECRET as string,
+    });
+
+    const user = await this.prisma.developer.findUnique({
+      where: { githubId: payload.sub },
+    });
+
+    if (
+      !user ||
+      !(await bcrypt.compare(refreshToken, user.refreshToken as string))
+    ) {
+      logger.error('Invalid refresh token');
+      throw new UnauthorizedException('Invalid Refresh Token');
+    }
+
+    return user;
   }
 }

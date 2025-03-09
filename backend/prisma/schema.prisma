@@ -15,7 +15,7 @@ datasource db {
 
 model Developer {
   id           Int            @id @default(autoincrement())
-  githubId     Int         @unique
+  githubId     Int            @unique
   name         String?
   username     String
   avatarUrl    String?
@@ -32,7 +32,7 @@ model Developer {
 
 model Commit {
   id           Int       @id @default(autoincrement())
-  developer    Developer @relation(fields: [developerId], references: [id])
+  developer    Developer @relation(fields: [developerId], references: [githubId])
   developerId  Int
   repo         String
   commit_count Int
@@ -44,7 +44,7 @@ model Commit {
 
 model Pull_Request {
   id          Int       @id @default(autoincrement())
-  developer   Developer @relation(fields: [developerId], references: [id])
+  developer   Developer @relation(fields: [developerId], references: [githubId])
   developerId Int
   repo        String
   pr_count    Int
@@ -55,7 +55,7 @@ model Pull_Request {
 
 model Issue {
   id          Int          @id @default(autoincrement())
-  developer   Developer    @relation(fields: [developerId], references: [id])
+  developer   Developer    @relation(fields: [developerId], references: [githubId])
   developerId Int
   repo        String
   issue_count Int
@@ -66,7 +66,7 @@ model Issue {
 
 model Code_Quality {
   id                    Int       @id @default(autoincrement())
-  developer             Developer @relation(fields: [developerId], references: [id])
+  developer             Developer @relation(fields: [developerId], references: [githubId])
   developerId           Int
   repo                  String
   lint_errors           Int       @default(0)
