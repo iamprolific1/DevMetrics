@@ -6,10 +6,11 @@ type Commit {
   id: Int!
   developer: Developer!
   developerId: Int!
+  sha: String!
+  message: String!
+  url: String!
   repo: String!
-  commit_count: Int!
-  additions: Int!
-  deletions: Int!
+  timestamp: DateTime!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -23,10 +24,12 @@ type Pull_Request {
   id: Int!
   developer: Developer!
   developerId: Int!
+  title: String!
+  url: String!
   repo: String!
-  pr_count: Int!
   status: PR_STATUS!
   createdAt: DateTime!
+  mergedAt: DateTime!
   updatedAt: DateTime!
 }
 
@@ -41,9 +44,12 @@ type Issue {
   id: Int!
   developer: Developer!
   developerId: Int!
+  title: String!
+  url: String!
   repo: String!
   status: ISSUE_STATUS!
   createdAt: DateTime!
+  closedAt: DateTime!
   updatedAt: DateTime!
 }
 
@@ -60,10 +66,10 @@ type Code_Quality {
   developer: Developer!
   developerId: Int!
   repo: String!
-  lint_errors: Int!
-  formatting_errors: Int!
-  code_smells: Int!
-  maintainability_score: Float!
+  lintErrors: Int!
+  formattingErrors: Int!
+  codeSmells: Int!
+  maintainabilityScore: Float!
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -87,4 +93,11 @@ type Developer {
 
 type Query {
   getDevelopers: [Developer!]!
+  getDeveloperById(githubId: Int!): Developer
+  getCommits: [Commit!]!
+  getCommitsByDeveloper(githubId: Int!): Commit
+}
+
+type Mutation {
+  deleteDeveloper(githubId: Int!): Developer!
 }

@@ -13,16 +13,19 @@ export class Commit {
   developerId: number;
 
   @Field()
+  sha: string;
+
+  @Field()
+  message: string;
+
+  @Field()
+  url: string;
+
+  @Field()
   repo: string;
 
-  @Field(() => Int)
-  commit_count: number;
-
-  @Field(() => Int)
-  additions: number;
-
-  @Field(() => Int)
-  deletions: number;
+  @Field()
+  timestamp: Date;
 
   @Field()
   createdAt: Date;

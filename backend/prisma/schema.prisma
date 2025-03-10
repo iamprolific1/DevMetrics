@@ -31,50 +31,55 @@ model Developer {
 }
 
 model Commit {
-  id           Int       @id @default(autoincrement())
-  developer    Developer @relation(fields: [developerId], references: [githubId])
-  developerId  Int
-  repo         String
-  commit_count Int
-  additions    Int
-  deletions    Int
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-}
-
-model Pull_Request {
   id          Int       @id @default(autoincrement())
   developer   Developer @relation(fields: [developerId], references: [githubId])
   developerId Int
+  sha         String    @unique
+  message     String
+  url         String
   repo        String
-  pr_count    Int
-  status      PR_STATUS
+  timestamp   DateTime
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
 
+model Pull_Request {
+  id          String       @id
+  developer   Developer @relation(fields: [developerId], references: [githubId])
+  developerId Int
+  title       String
+  url         String
+  repo        String
+  status      PR_STATUS
+  createdAt   DateTime  @default(now())
+  mergedAt    DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
 model Issue {
-  id          Int          @id @default(autoincrement())
+  id          String          @id
   developer   Developer    @relation(fields: [developerId], references: [githubId])
   developerId Int
+  title       String
+  url         String
   repo        String
-  issue_count Int
   status      ISSUE_STATUS
   createdAt   DateTime     @default(now())
+  closedAt    DateTime?
   updatedAt   DateTime     @updatedAt
 }
 
 model Code_Quality {
-  id                    Int       @id @default(autoincrement())
-  developer             Developer @relation(fields: [developerId], references: [githubId])
-  developerId           Int
-  repo                  String
-  lint_errors           Int       @default(0)
-  formatting_errors     Int       @default(0)
-  code_smells           Int
-  maintainability_score Float
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id                   Int       @id @default(autoincrement())
+  developer            Developer @relation(fields: [developerId], references: [githubId])
+  developerId          Int
+  repo                 String
+  lintErrors           Int       @default(0)
+  formattingErrors     Int       @default(0)
+  codeSmells           Int
+  maintainabilityScore Float
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 }
 
 enum PR_STATUS {

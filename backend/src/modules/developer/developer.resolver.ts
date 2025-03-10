@@ -1,4 +1,4 @@
-import { Resolver, Query, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Args, Mutation, Int } from '@nestjs/graphql';
 import { DeveloperService } from './developer.service';
 import { Developer } from './developer.model';
 
@@ -16,5 +16,12 @@ export class DeveloperResolver {
     @Args('githubId', { type: () => Int }) githubId: number,
   ) {
     return this.developerService.findOne(githubId);
+  }
+
+  @Mutation(() => Developer)
+  async deleteDeveloper(
+    @Args('githubId', { type: () => Int }) githubId: number,
+  ) {
+    return this.developerService.deleteDeveloper(githubId);
   }
 }

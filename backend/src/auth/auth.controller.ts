@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
+import logger from 'src/utils/logger';
 
 @Controller('auth')
 export class AuthController {
@@ -42,7 +43,7 @@ export class AuthController {
       const tokens = await this.authService.generateTokens(user);
       return response.json({ tokens });
     } catch (error) {
-      console.error('�� Refresh token validation failed:', error);
+      logger.error('�� Refresh token validation failed:', error);
       response.status(401).json({ error: 'Refresh token validation failed' });
     }
   }

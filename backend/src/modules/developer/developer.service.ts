@@ -14,4 +14,11 @@ export class DeveloperService {
       where: { githubId },
     });
   }
+
+  // delete a developer
+  async deleteDeveloper(githubId: number) {
+    return this.prisma.developer.delete({
+      where: { githubId },
+    });
+  }
 }

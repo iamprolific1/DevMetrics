@@ -25,6 +25,12 @@ export class Issue {
   developerId: number;
 
   @Field()
+  title: string;
+
+  @Field()
+  url: string;
+
+  @Field()
   repo: string;
 
   @Field(() => ISSUE_STATUS)
@@ -32,6 +38,9 @@ export class Issue {
 
   @Field()
   createdAt: Date;
+
+  @Field()
+  closedAt?: Date;
 
   @Field()
   updatedAt: Date;

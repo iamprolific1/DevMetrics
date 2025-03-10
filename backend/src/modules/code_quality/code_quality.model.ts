@@ -16,16 +16,16 @@ export class Code_Quality {
   repo: string;
 
   @Field(() => Int, { defaultValue: 0 })
-  lint_errors: number;
+  lintErrors: number;
 
   @Field(() => Int, { defaultValue: 0 })
-  formatting_errors: number;
+  formattingErrors: number;
 
   @Field(() => Int)
-  code_smells: number;
+  codeSmells: number;
 
   @Field(() => Float)
-  maintainability_score: number;
+  maintainabilityScore: number;
 
   @Field()
   createdAt: Date;

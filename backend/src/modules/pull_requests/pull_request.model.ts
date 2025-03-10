@@ -24,16 +24,22 @@ export class Pull_Request {
   developerId: number;
 
   @Field()
-  repo: string;
+  title: string;
 
-  @Field(() => Int)
-  pr_count: number;
+  @Field()
+  url: string;
+
+  @Field()
+  repo: string;
 
   @Field(() => PR_STATUS)
   status: PR_STATUS;
 
   @Field()
   createdAt: Date;
+
+  @Field()
+  mergedAt?: Date;
 
   @Field()
   updatedAt: Date;
