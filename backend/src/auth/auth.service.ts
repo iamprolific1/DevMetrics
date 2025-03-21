@@ -47,12 +47,13 @@ export class AuthService {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const userProfile = await this.getUserProfile(accessToken);
       const user = await this.validateUser(userProfile, accessToken);
-      const tokens = await this.generateTokens(user);
+      const tokens = await this.generateTokens(user, response);
 
       await this.fetchAndStoreData(user.githubId, accessToken, user.username);
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      response.json({ user, ...tokens });
+      response.redirect('http://localhost:3000/onboarding/personalization');
+      return { user, ...tokens };
 
       // save user's data in the database.
     } catch (error) {
@@ -116,6 +117,8 @@ export class AuthService {
           email: profile.email || null,
           avatarUrl: profile.avatar_url || null,
           accessToken,
+          firstTimeUser: false,
+          OnboardingStep: { create: { stepNumber: 2 } },
         },
       });
     }
@@ -128,7 +131,10 @@ export class AuthService {
     });
   }
 
-  async generateTokens(user: { githubId: number; username: string }) {
+  async generateTokens(
+    user: { githubId: number; username: string },
+    response: Response,
+  ) {
     const payload = { sub: user.githubId, username: user.username };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -148,14 +154,32 @@ export class AuthService {
       data: { refreshToken: hashedRefreshToken },
     });
 
+    response.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      domain: 'localhost',
+      path: '/',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    response.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      domain: 'localhost',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return { accessToken, refreshToken };
   }
 
   // function to validate refresh token
-  async validateRefreshToken(refreshToken: string) {
+  async validateRefreshToken(token: string) {
     type PayloadType = { sub: number; username: string };
 
-    const payload: PayloadType = this.jwtService.verify(refreshToken, {
+    const payload: PayloadType = this.jwtService.verify(token, {
       secret: process.env.REFRESH_SECRET as string,
     });
 
@@ -163,10 +187,7 @@ export class AuthService {
       where: { githubId: payload.sub },
     });
 
-    if (
-      !user ||
-      !(await bcrypt.compare(refreshToken, user.refreshToken as string))
-    ) {
+    if (!user || !(await bcrypt.compare(token, user.refreshToken as string))) {
       logger.error('Invalid refresh token');
       throw new UnauthorizedException('Invalid Refresh Token');
     }
@@ -318,5 +339,28 @@ export class AuthService {
       })),
       skipDuplicates: true,
     });
+  }
+
+  // function to validate access token and determine users login status as either new or existing user
+  async validateAccessToken(accessToken: string) {
+    type PayloadType = { sub: number; username: string };
+
+    try {
+      const payload: PayloadType = this.jwtService.verify(accessToken, {
+        secret: process.env.JWT_SECRET,
+      });
+
+      // find user from DB
+      const user = await this.prisma.developer.findUnique({
+        where: { githubId: payload.sub },
+      });
+
+      if (!user) throw new UnauthorizedException('User not found');
+      return user;
+    } catch (error) {
+      console.error('Error validating access token');
+      logger.error('Error validating access token: ', error);
+      throw new UnauthorizedException('Invalid or expired access token');
+    }
   }
 }

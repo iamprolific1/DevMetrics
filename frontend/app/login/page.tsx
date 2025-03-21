@@ -1,18 +1,74 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import SecureLogin from "@/public/secure_login.svg";
-import GitHubIcon from "@mui/icons-material/GitHub";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
 import CircularProgress from "@mui/material/CircularProgress";
+import axiosInstance from "@/app/api/axiosInstance";
+import { useToast } from "../providers/Toast/Toast";
 
 export default function Login() {
+    const router = useRouter();
+    const { showToast } = useToast();
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const handleLogin = async() => {
+    const handleLogin = async () => {
         setIsLoading(true);
-    }
+        
+
+        try {
+            const response = await axiosInstance.get("/auth/validate");
+            console.log("Response: ", response?.data);
+
+            if (response.status === 200) {
+                const { redirect } = response.data;
+                showToast("Authentication Successful!!. Welcome back.", "success", {
+                    vertical: "top",
+                    horizontal: "center"
+                });
+                setTimeout(()=> {
+                    router.push(redirect);
+                }, 1000)
+            }
+        } catch (error: any) {
+            console.error("Error authenticating user: ", error);
+
+            const status = error.response?.status;
+
+            if (status === 401) {
+                showToast("Your session has expired. Please log in again.", "error", {
+                    vertical: "top",
+                    horizontal: "center",
+                });
+                setTimeout(()=> {
+                    router.push("/login");
+                }, 1000);
+            } else if (status === 404) {
+                showToast(
+                    "Looks like you’re new here! Let’s get you set up.",
+                    "info",
+                    {
+                        vertical: "top",
+                        horizontal: "center",
+                    }
+                );
+                setTimeout(()=> {
+                    router.push("/onboarding");
+                }, 1000);
+            } else {
+                showToast("Login failed. Please try again.", "error", {
+                    vertical: "top",
+                    horizontal: "center",
+                });
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
 
     return (
         <>
@@ -40,7 +96,7 @@ export default function Login() {
                 >
                     { isLoading ? <><CircularProgress sx={{
                         color: 'white'
-                    }} size={20} /> Authenticating...</> : <><GitHubIcon style={{ fontSize: 20 }} /> Sign In with GitHub</>}
+                    }} size={20} /> Authenticating...</> : <><LockOpenIcon style={{ fontSize: 20 }} /> Unlock Your Productivity</>}
                 </button>
             </motion.div>
         </>

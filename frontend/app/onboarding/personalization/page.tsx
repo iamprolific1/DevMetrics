@@ -2,12 +2,12 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
-
+import Cookies from "js-cookie";
 const languages = ["JavaScript", "TypeScript", "Python", "Go", "Rust", "Other"];
 const frequencies = ["Daily", "Weekly", "Monthly"];
 
 export default function OnboardingPersonalization() {
-
+    console.log("accessToken: ", Cookies.get("accessToken"))
     const [language, setLanguage] = useState<string>("");
     const [frequency, setFrequency] = useState<string>("");
     const [goal, setGoal] = useState<string>("");

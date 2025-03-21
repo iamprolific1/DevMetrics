@@ -14,10 +14,7 @@ export default function OnboardingConnect() {
     const handleGithubAuth = async() => {
         setIsConnecting(true);
 
-        // setTimeout(() => {
-        //   setIsConnecting(false);
-        //   onNext(); // Move to the next step after successful connection
-        // }, 2000);
+        window.location.href = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/github`;
     }
 
     return (

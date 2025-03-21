@@ -5,12 +5,12 @@ import {
   Req,
   Res,
   Get,
-  Post,
-  Body,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
+import { AuthGuard } from '@nestjs/passport';
 import logger from 'src/utils/logger';
 
 @Controller('auth')
@@ -25,23 +25,69 @@ export class AuthController {
     return this.authService.githubCallback(request, response);
   }
 
-  @Post('refresh')
-  async refreshToken(
-    @Body('refreshToken') refreshToken: string,
+  @Get('/validate')
+  async validateAccessToken(
+    @Req() request: Request,
     @Res() response: Response,
   ) {
-    if (!refreshToken) {
+    const token = request.cookies['accessToken'];
+    console.log('accessToken: ', token);
+
+    if (!token) {
+      return response.status(404).json({ error: 'Token is missing' });
+    }
+
+    try {
+      const user = await this.authService.validateAccessToken(token);
+
+      if (user.firstTimeUser) {
+        return response.json({ redirect: '/onboarding' });
+      }
+
+      return response.json({ redirect: '/dashboard' });
+    } catch (error) {
+      console.error('⛔ Invalid or expired token:', error);
+      return response.status(401).json({ error: 'Invalid or expired token' });
+    }
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt')) // protect route with jwt guard
+  getMe(@Req() request: Request) {
+    const user = request.user;
+
+    if (!user) {
+      return { user: null };
+    }
+
+    return { user };
+  }
+
+  @Get('refresh')
+  async refreshToken(@Req() request: Request, @Res() response: Response) {
+    const token = request.cookies['refreshToken'];
+    console.log('Refresh token:', token);
+    if (!token) {
       throw new UnauthorizedException('Refresh token is missing');
     }
 
     try {
-      const user = await this.authService.validateRefreshToken(refreshToken);
+      const user = await this.authService.validateRefreshToken(token);
 
       if (!user) {
         throw new UnauthorizedException('Invalid refresh token');
       }
-      const tokens = await this.authService.generateTokens(user);
-      return response.json({ tokens });
+      const tokens = await this.authService.generateTokens(user, response);
+      console.log('tokens: ', tokens);
+      const { accessToken } = tokens;
+      response.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        domain: 'http://localhost:3000',
+        path: '/',
+        maxAge: 15 * 60 * 1000,
+      });
     } catch (error) {
       logger.error('�� Refresh token validation failed:', error);
       response.status(401).json({ error: 'Refresh token validation failed' });
