@@ -20,50 +20,45 @@ export default function Login() {
         
 
         try {
-            const response = await axiosInstance.get("/auth/validate");
+            // Try to validate access token (if available)
+            const response = await axiosInstance.get('/auth/validate');
             console.log("Response: ", response?.data);
 
-            if (response.status === 200) {
+            if(response.status === 200) {
                 const { redirect } = response.data;
-                showToast("Authentication Successful!!. Welcome back.", "success", {
+
+                showToast("Welcome Back! Authentication Successful.", "success", {
                     vertical: "top",
-                    horizontal: "center"
+                    horizontal: "center",
                 });
                 setTimeout(()=> {
                     router.push(redirect);
-                }, 1000)
+                }, 1000);
+                return;
             }
         } catch (error: any) {
-            console.error("Error authenticating user: ", error);
+            const status = error?.response?.status;
+            console.warn("No valid token found. Status: ", status);
 
-            const status = error.response?.status;
-
-            if (status === 401) {
-                showToast("Your session has expired. Please log in again.", "error", {
+            // if token not found or is expired
+            if (status === 401 || status === 404) {
+                showToast("Welcome Back! Authentication Successful.", "success", {
                     vertical: "top",
                     horizontal: "center",
                 });
+
                 setTimeout(()=> {
-                    router.push("/login");
-                }, 1000);
-            } else if (status === 404) {
-                showToast(
-                    "Looks like you’re new here! Let’s get you set up.",
-                    "info",
-                    {
-                        vertical: "top",
-                        horizontal: "center",
-                    }
-                );
-                setTimeout(()=> {
-                    router.push("/onboarding");
-                }, 1000);
+                    router.push(`${process.env.NEXT_PUBLIC_BASE_URL}/auth/github`);
+                }, 1000)
             } else {
-                showToast("Login failed. Please try again.", "error", {
+                // fallback error
+                showToast("An unexpected error occured. Please try again.", "error", {
                     vertical: "top",
-                    horizontal: "center",
+                    horizontal: "center"
                 });
             }
+
+            console.error("An unexpected error occured. Please try again.", error);
         } finally {
             setIsLoading(false);
         }
@@ -93,6 +88,7 @@ export default function Login() {
                 <button 
                     onClick={handleLogin}
                     className="w-full flex items-center justify-center cursor-pointer gap-2 py-3 px-6 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:scale-105 transition transform duration-300 text-white font-semibold shadow-lg"
+                    disabled={isLoading}
                 >
                     { isLoading ? <><CircularProgress sx={{
                         color: 'white'

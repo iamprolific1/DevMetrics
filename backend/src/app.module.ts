@@ -7,6 +7,8 @@ import { AuthService } from './auth/auth.service';
 import { GraphqlModule } from './graphql/graphql.module';
 import { DeveloperModule } from './modules/developer/developer.module';
 import { CommitModule } from './modules/commits/commit.module';
+import { UserController } from './user/user.controller';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -15,8 +17,9 @@ import { CommitModule } from './modules/commits/commit.module';
     GraphqlModule,
     DeveloperModule,
     CommitModule,
+    UserModule,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, UserController],
   providers: [AuthService],
 })
 export class AppModule {}

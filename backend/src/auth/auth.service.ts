@@ -46,13 +46,23 @@ export class AuthService {
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const userProfile = await this.getUserProfile(accessToken);
-      const user = await this.validateUser(userProfile, accessToken);
+      const { user, isNewUser } = await this.validateUser(
+        userProfile,
+        accessToken,
+      );
       const tokens = await this.generateTokens(user, response);
 
-      await this.fetchAndStoreData(user.githubId, accessToken, user.username);
+      if (isNewUser) {
+        await this.fetchAndStoreData(user.githubId, accessToken, user.username);
+      }
+
+      const CLIENTBASEURL = process.env.CLIENT_ORIGIN as string;
+      const redirectUrl = isNewUser
+        ? `${CLIENTBASEURL}/onboarding`
+        : `${CLIENTBASEURL}/dashboard`;
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      response.redirect('http://localhost:3000/onboarding/personalization');
+      response.redirect(redirectUrl);
       return { user, ...tokens };
 
       // save user's data in the database.
@@ -103,13 +113,13 @@ export class AuthService {
   private async validateUser(
     profile: DeveloperProfileType,
     accessToken: string,
-  ) {
+  ): Promise<{ user: any; isNewUser: boolean }> {
     const existingUser = await this.prisma.developer.findUnique({
       where: { githubId: profile.id },
     });
 
     if (!existingUser) {
-      return await this.prisma.developer.create({
+      const newUser = await this.prisma.developer.create({
         data: {
           githubId: profile.id,
           username: profile.login,
@@ -121,14 +131,18 @@ export class AuthService {
           OnboardingStep: { create: { stepNumber: 2 } },
         },
       });
+
+      return { user: newUser, isNewUser: true };
     }
 
     // update access token if user exists
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return await this.prisma.developer.update({
+    const updatedUser = await this.prisma.developer.update({
       where: { githubId: profile.id },
       data: { accessToken },
     });
+
+    return { user: updatedUser, isNewUser: false };
   }
 
   async generateTokens(
@@ -312,6 +326,7 @@ export class AuthService {
       skipDuplicates: true,
     });
   }
+
   private async storePullRequests(pullRequests: any[], githubId: number) {
     await this.prisma.pull_Request.createMany({
       data: pullRequests.map((pr) => ({

@@ -14,22 +14,23 @@ datasource db {
 }
 
 model Developer {
-  id             Int              @id @default(autoincrement())
-  githubId       Int              @unique
-  name           String?
-  username       String
-  avatarUrl      String?
-  email          String?
-  accessToken    String?
-  refreshToken   String?
-  firstTimeUser  Boolean          @default(true)
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  Commit         Commit[]
-  Pull_Request   Pull_Request[]
-  Issue          Issue[]
-  Code_Quality   Code_Quality[]
-  OnboardingStep OnboardingStep[]
+  id                    Int                     @id @default(autoincrement())
+  githubId              Int                     @unique
+  name                  String?
+  username              String
+  avatarUrl             String?
+  email                 String?
+  accessToken           String?
+  refreshToken          String?
+  firstTimeUser         Boolean                 @default(true)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  Commit                Commit[]
+  Pull_Request          Pull_Request[]
+  Issue                 Issue[]
+  Code_Quality          Code_Quality[]
+  OnboardingStep        OnboardingStep[]
+  Developer_Preferences Developer_Preferences[]
 }
 
 model OnboardingStep {
@@ -94,6 +95,17 @@ model Code_Quality {
   updatedAt            DateTime  @updatedAt
 }
 
+model Developer_Preferences {
+  id          Int       @id @default(autoincrement())
+  developer   Developer @relation(fields: [developerId], references: [githubId])
+  developerId Int       @unique
+  languages   Json      @default("[]")
+  frequency   FREQUENCY
+  codingGoal  Int       @default(1)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 enum PR_STATUS {
   OPEN
   CLOSED
@@ -105,4 +117,10 @@ enum ISSUE_STATUS {
   CLOSED
   RESOLVED
   IGNORED
+}
+
+enum FREQUENCY {
+  DAILY
+  WEEKLY
+  MONTHLY
 }

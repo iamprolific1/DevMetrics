@@ -46,7 +46,7 @@ export class AuthController {
 
       return response.json({ redirect: '/dashboard' });
     } catch (error) {
-      console.error('⛔ Invalid or expired token:', error);
+      console.error('Invalid or expired token:', error);
       return response.status(401).json({ error: 'Invalid or expired token' });
     }
   }
@@ -68,7 +68,9 @@ export class AuthController {
     const token = request.cookies['refreshToken'];
     console.log('Refresh token:', token);
     if (!token) {
-      throw new UnauthorizedException('Refresh token is missing');
+      console.log(
+        'Refresh token is missing!! Attempting to log user in directly again',
+      );
     }
 
     try {
@@ -84,12 +86,12 @@ export class AuthController {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
-        domain: 'http://localhost:3000',
+        domain: 'localhost',
         path: '/',
         maxAge: 15 * 60 * 1000,
       });
     } catch (error) {
-      logger.error('�� Refresh token validation failed:', error);
+      logger.error('Refresh token validation failed:', error);
       response.status(401).json({ error: 'Refresh token validation failed' });
     }
   }
