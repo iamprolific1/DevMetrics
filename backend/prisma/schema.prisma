@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Developer {
+  id                    Int                     @id @default(autoincrement())
+  githubId              Int                     @unique
+  name                  String?
+  username              String
+  avatarUrl             String?
+  email                 String?
+  accessToken           String?
+  refreshToken          String?
+  firstTimeUser         Boolean                 @default(true)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  Commit                Commit[]
+  Pull_Request          Pull_Request[]
+  Issue                 Issue[]
+  Code_Quality          Code_Quality[]
+  OnboardingStep        OnboardingStep[]
+  Developer_Preferences Developer_Preferences[]
+}
+
+model OnboardingStep {
+  id          Int       @id @default(autoincrement())
+  developer   Developer @relation(fields: [developerId], references: [githubId])
+  developerId Int
+  stepNumber  Int       @default(1)
+  completed   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Commit {
+  id          Int       @id @default(autoincrement())
+  developer   Developer @relation(fields: [developerId], references: [githubId])
+  developerId Int
+  sha         String    @unique
+  message     String
+  url         String
+  repo        String
+  timestamp   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Pull_Request {
+  id          String    @id
+  developer   Developer @relation(fields: [developerId], references: [githubId])
+  developerId Int
+  title       String
+  url         String
+  repo        String
+  status      PR_STATUS
+  createdAt   DateTime  @default(now())
+  mergedAt    DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
+model Issue {
+  id          String       @id
+  developer   Developer    @relation(fields: [developerId], references: [githubId])
+  developerId Int
+  title       String
+  url         String
+  repo        String
+  status      ISSUE_STATUS
+  createdAt   DateTime     @default(now())
+  closedAt    DateTime?
+  updatedAt   DateTime     @updatedAt
+}
+
+model Code_Quality {
+  id                   Int       @id @default(autoincrement())
+  developer            Developer @relation(fields: [developerId], references: [githubId])
+  developerId          Int
+  repo                 String
+  lintErrors           Int       @default(0)
+  formattingErrors     Int       @default(0)
+  codeSmells           Int
+  maintainabilityScore Float
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model Developer_Preferences {
+  id          Int       @id @default(autoincrement())
+  developer   Developer @relation(fields: [developerId], references: [githubId])
+  developerId Int       @unique
+  languages   Json      @default("[]")
+  frequency   FREQUENCY
+  codingGoal  Int       @default(1)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum PR_STATUS {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+enum ISSUE_STATUS {
+  OPEN
+  CLOSED
+  RESOLVED
+  IGNORED
+}
+
+enum FREQUENCY {
+  DAILY
+  WEEKLY
+  MONTHLY
+}

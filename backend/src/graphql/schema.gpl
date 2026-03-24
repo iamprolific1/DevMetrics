@@ -1,0 +1,103 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Commit {
+  id: Int!
+  developer: Developer!
+  developerId: Int!
+  sha: String!
+  message: String!
+  url: String!
+  repo: String!
+  timestamp: DateTime!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Pull_Request {
+  id: Int!
+  developer: Developer!
+  developerId: Int!
+  title: String!
+  url: String!
+  repo: String!
+  status: PR_STATUS!
+  createdAt: DateTime!
+  mergedAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""The status of a pull request"""
+enum PR_STATUS {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+type Issue {
+  id: Int!
+  developer: Developer!
+  developerId: Int!
+  title: String!
+  url: String!
+  repo: String!
+  status: ISSUE_STATUS!
+  createdAt: DateTime!
+  closedAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""The status of an issue"""
+enum ISSUE_STATUS {
+  OPEN
+  CLOSED
+  RESOLVED
+  IGNORED
+}
+
+type Code_Quality {
+  id: Int!
+  developer: Developer!
+  developerId: Int!
+  repo: String!
+  lintErrors: Int!
+  formattingErrors: Int!
+  codeSmells: Int!
+  maintainabilityScore: Float!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Developer {
+  id: Int!
+  githubId: Int!
+  name: String
+  username: String!
+  avatarUrl: String
+  email: String
+  accessToken: String
+  refreshToken: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  Commit: [Commit!]
+  Pull_Request: [Pull_Request!]
+  Issue: [Issue!]
+  Code_Quality: [Code_Quality!]
+}
+
+type Query {
+  getDevelopers: [Developer!]!
+  getDeveloperById(githubId: Int!): Developer
+  getCommits: [Commit!]!
+  getCommitsByDeveloper(githubId: Int!): Commit
+}
+
+type Mutation {
+  deleteDeveloper(githubId: Int!): Developer!
+}
