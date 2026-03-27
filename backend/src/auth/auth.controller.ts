@@ -61,6 +61,19 @@ export class AuthController {
     return this.authService.getUserCommits(request.user);
   }
 
+  @Get('streaks')
+  @UseGuards(AuthGuard('jwt'))
+  async getStreaks(@Req() request: Request) {
+
+    if (!request.user) {
+      throw new UnauthorizedException('User is not authenticated');
+    }
+
+    const commits = await this.authService.getUserCommits(request.user);
+
+    return this.authService.calculatestreaks(commits);
+  }
+
   @Get('me')
   @UseGuards(AuthGuard('jwt')) // protect route with jwt guard
   getMe(@Req() request: Request) {

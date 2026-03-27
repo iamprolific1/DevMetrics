@@ -386,4 +386,55 @@ export class AuthService {
     });
     return commits;
   }
+
+  calculatestreaks(commits: any[]) {
+    if (!commits.length) return { activeStreak: 0, longestStreak: 0 }
+
+    // Get unique commit days
+    const commitDays = new Set(
+      commits.map((c) => new Date(c.timestamp).toLocaleString())
+    ); // try to understand why `Set()` method is used here....
+
+    // convert to sorted arrays of dates
+    const sortedDays = Array.from(commitDays).map((d)=> new Date(d)).sort((a, b) => a.getTime() - b.getTime()); // try to understand what it means to convert to sorted arrays and understand the logic used well enough.
+
+    let longestStreak = 0;
+    let currentStreak = 0;
+
+    // calculate longest streak
+    for(let i=0; i < sortedDays.length; i++) {
+      if (i===0) {
+        currentStreak = 1;
+      } else {
+        const diff = (sortedDays[i].getTime() - sortedDays[i - 1].getTime()) / (1000 * 60 * 60 * 24);
+
+        if (diff === 1) {
+          currentStreak++;
+        } else {
+          currentStreak = 1;
+        }
+      }
+
+      longestStreak = Math.max(longestStreak, currentStreak);
+    }
+
+    // calculate active streak (from today backwards)
+    let activeStreak = 0;
+    let today = new Date();
+
+    while(true) {
+      const dayString = today.toLocaleString();
+
+      if (commitDays.has(dayString)) {
+        activeStreak++;
+        today.setDate(today.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+
+    return { activeStreak, longestStreak }
+
+
+  }
 }
